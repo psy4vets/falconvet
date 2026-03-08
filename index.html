@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FalconVet – Feedback</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:linear-gradient(135deg,#e8f4fd,#dbeafe);min-height:100vh;padding:20px 16px 48px}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:#f1f5f9;border-radius:10px}::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:10px}
+
+.page{max-width:640px;margin:0 auto}
+.card{background:#fff;border-radius:20px;box-shadow:0 4px 24px rgba(0,0,0,.08);padding:28px;margin-bottom:18px}
+
+/* TOP BAR */
+.top-bar{display:flex;justify-content:flex-end;margin-bottom:12px}
+.lang-btn{background:#fff;border:none;border-radius:10px;padding:8px 18px;font-weight:700;font-size:.78rem;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.1);letter-spacing:.5px;transition:all .2s}
+.lang-btn:hover{background:#f1f5f9}
+
+/* HEADER */
+.header{text-align:center}
+.logo-wrap{display:inline-block;cursor:pointer;user-select:none;margin-bottom:14px;padding:8px;border-radius:16px;transition:background .2s}
+.logo-wrap:hover{background:#f0f7ff}
+.logo-wrap img,.logo-wrap svg{height:72px;display:block}
+.header h1{font-size:1.5rem;font-weight:800;color:#1e3a5f;margin-bottom:6px}
+.header p{color:#64748b;font-size:.95rem}
+
+/* EMOJI */
+.emoji-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:18px 0}
+.e-btn{border:2px solid transparent;border-radius:14px;padding:12px 4px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;transition:all .2s;background:#f8fafc}
+.e-btn:hover{transform:translateY(-3px);box-shadow:0 6px 16px rgba(0,0,0,.1)}
+.e-btn.selected{transform:translateY(-3px);box-shadow:0 6px 20px rgba(0,0,0,.15)}
+.e-btn .ico{font-size:2rem;line-height:1}
+.e-btn .lbl{font-size:.6rem;color:#374151;font-weight:600;text-align:center;line-height:1.3}
+.e1{background:#fff0f0}.e1.selected{border-color:#ef4444;background:#fff0f0}
+.e2{background:#fff4ed}.e2.selected{border-color:#f97316;background:#fff4ed}
+.e3{background:#fefce8}.e3.selected{border-color:#eab308;background:#fefce8}
+.e4{background:#f0fdf4}.e4.selected{border-color:#22c55e;background:#f0fdf4}
+.e5{background:#ecfdf5}.e5.selected{border-color:#10b981;background:#ecfdf5}
+
+/* FORM */
+.field-label{display:flex;justify-content:space-between;align-items:center;font-size:.82rem;font-weight:600;color:#374151;margin-bottom:6px}
+.counter{font-family:monospace;font-size:.72rem;color:#94a3b8}
+textarea{width:100%;border:2px solid #e2e8f0;border-radius:12px;padding:12px;font-size:.88rem;font-family:inherit;resize:none;outline:none;transition:border .2s;color:#1e293b}
+textarea:focus{border-color:#3b82f6}
+
+.submit-btn{width:100%;padding:14px;border:none;border-radius:14px;background:linear-gradient(135deg,#2563eb,#4f46e5);color:#fff;font-size:1rem;font-weight:700;cursor:pointer;transition:all .2s;margin-top:16px;box-shadow:0 4px 14px rgba(37,99,235,.3);display:flex;align-items:center;justify-content:center;gap:8px}
+.submit-btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 6px 20px rgba(37,99,235,.4)}
+.submit-btn:active:not(:disabled){transform:scale(.98)}
+.submit-btn:disabled{opacity:.7;cursor:not-allowed}
+
+/* ALERTS */
+.alert{display:none;border-radius:14px;padding:14px 16px;margin-top:14px;font-size:.86rem;gap:10px;align-items:flex-start}
+.alert.show{display:flex}
+.alert-error{background:#fef2f2;border:2px solid #fecaca;color:#991b1b}
+.alert-success{background:#f0fdf4;border:2px solid #86efac;color:#166534}
+.spinner{width:18px;height:18px;border:3px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.fade-in{animation:fadeIn .35s ease}
+
+/* ── ADMIN ── */
+#adminView{display:none}
+#adminView.show{display:block}
+#clientView.hide{display:none}
+
+.admin-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.admin-badge{background:linear-gradient(135deg,#1e3a5f,#2563eb);color:#fff;border-radius:99px;padding:5px 16px;font-size:.72rem;font-weight:700;letter-spacing:.5px}
+.exit-btn{background:#f1f5f9;border:none;border-radius:10px;padding:8px 16px;font-size:.8rem;font-weight:700;cursor:pointer;color:#374151;transition:all .2s}
+.exit-btn:hover{background:#e2e8f0}
+
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:18px 0}
+.stat-box{background:linear-gradient(135deg,#f8fafc,#f1f5f9);border-radius:16px;padding:16px 10px;text-align:center;border:2px solid #e2e8f0}
+.stat-box .val{font-size:2rem;font-weight:800;color:#1e3a5f;line-height:1}
+.stat-box .key{font-size:.68rem;color:#64748b;font-weight:600;margin-top:4px;text-transform:uppercase;letter-spacing:.3px}
+
+.sec-title{font-size:.88rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px}
+
+/* BARS */
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+.bar-emoji{font-size:1.25rem;width:26px;text-align:center;flex-shrink:0}
+.bar-track{flex:1;background:#f1f5f9;border-radius:99px;height:18px;overflow:hidden}
+.bar-fill{height:100%;border-radius:99px;transition:width .8s cubic-bezier(.25,.8,.25,1);min-width:0}
+.bar-pct{font-size:.72rem;font-weight:700;color:#64748b;width:30px;text-align:right;flex-shrink:0}
+.b1{background:linear-gradient(90deg,#ef4444,#f87171)}
+.b2{background:linear-gradient(90deg,#f97316,#fb923c)}
+.b3{background:linear-gradient(90deg,#eab308,#facc15)}
+.b4{background:linear-gradient(90deg,#22c55e,#4ade80)}
+.b5{background:linear-gradient(90deg,#10b981,#34d399)}
+
+/* FEEDBACK ITEMS */
+.fb-item{border:2px solid #f1f5f9;border-radius:14px;padding:14px;margin-bottom:10px;transition:all .2s;animation:fadeIn .3s ease}
+.fb-item:hover{border-color:#bfdbfe;background:#fafcff}
+.fb-meta{display:flex;align-items:center;gap:10px}
+.fb-meta .big-ico{font-size:1.8rem;flex-shrink:0}
+.fb-info .name{font-weight:700;font-size:.88rem;color:#1e293b}
+.fb-info .date{font-size:.72rem;color:#94a3b8;margin-top:1px}
+.fb-comment{background:#f8fafc;border-radius:10px;padding:10px 12px;font-size:.82rem;color:#374151;font-style:italic;margin-top:8px;border-left:3px solid #bfdbfe}
+
+.empty-state{text-align:center;padding:40px 20px;color:#94a3b8}
+.empty-state .ico{font-size:3rem;margin-bottom:10px}
+
+/* SETUP BANNER */
+.setup-banner{background:linear-gradient(135deg,#fffbeb,#fef3c7);border:2px solid #fde68a;border-radius:14px;padding:16px;margin-bottom:18px;font-size:.82rem;color:#92400e}
+.setup-banner strong{display:block;margin-bottom:6px;font-size:.88rem}
+.setup-banner code{background:#fef9c3;padding:2px 6px;border-radius:6px;font-family:monospace;font-size:.78rem;word-break:break-all}
+
+/* EXPORT BTN */
+.export-btn{background:#f0fdf4;border:2px solid #86efac;color:#166534;border-radius:12px;padding:10px 18px;font-size:.82rem;font-weight:700;cursor:pointer;transition:all .2s;width:100%;margin-top:4px}
+.export-btn:hover{background:#dcfce7}
+
+footer{text-align:center;margin-top:6px}
+footer a{color:#94a3b8;font-size:.75rem;text-decoration:none}
+footer a:hover{color:#3b82f6}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="top-bar">
+    <button class="lang-btn" id="langBtn">RO</button>
+  </div>
+
+  <!-- ═══ CLIENT VIEW ═══ -->
+  <div id="clientView">
+    <div class="card header fade-in">
+      <div class="logo-wrap" id="logoWrap">
+        <img src="Falconvet.png" alt="FalconVet">
+        
+      </div>
+      <h1 id="mainTitle">Feedback FalconVet</h1>
+      <p id="mainSub">Cum a fost vizita dumneavoastră astăzi?</p>
+    </div>
+
+    <div class="card fade-in">
+      <div class="sec-title" id="rateLabel">Evaluați experiența</div>
+
+      <div id="errBox" class="alert alert-error">
+        <span>⚠️</span><span id="errText"></span>
+      </div>
+
+      <div class="emoji-grid">
+        <button class="e-btn e1" data-id="1" data-emoji="😠"><span class="ico">😠</span><span class="lbl" id="l1">Foarte<br>Nemulțumit</span></button>
+        <button class="e-btn e2" data-id="2" data-emoji="😕"><span class="ico">😕</span><span class="lbl" id="l2">Nemulțumit</span></button>
+        <button class="e-btn e3" data-id="3" data-emoji="😐"><span class="ico">😐</span><span class="lbl" id="l3">Neutru</span></button>
+        <button class="e-btn e4" data-id="4" data-emoji="😊"><span class="ico">😊</span><span class="lbl" id="l4">Mulțumit</span></button>
+        <button class="e-btn e5" data-id="5" data-emoji="😍"><span class="ico">😍</span><span class="lbl" id="l5">Foarte<br>Mulțumit</span></button>
+      </div>
+
+      <div class="field-label">
+        <span id="commLabel">Comentarii (opțional)</span>
+        <span class="counter" id="counter">0/500</span>
+      </div>
+      <textarea id="fbText" rows="3" maxlength="500" id="fbText" placeholder="Spuneți-ne mai multe..."></textarea>
+
+      <button class="submit-btn" id="submitBtn">
+        <span id="submitLbl">Trimite Feedback</span>
+      </button>
+
+      <div id="successBox" class="alert alert-success fade-in">
+        ✅&nbsp;<div><strong id="succTitle">Vă mulțumim!</strong><br><span id="succMsg">Răspunsul a fost înregistrat.</span></div>
+      </div>
+    </div>
+
+    <footer><a href="https://www.psyalexsimion.com" target="_blank">© 2025 Alex Simion</a></footer>
+  </div>
+
+  <!-- ═══ ADMIN VIEW ═══ -->
+  <div id="adminView">
+    <div class="card fade-in">
+      <div class="admin-header">
+        <span class="admin-badge">🔒 ADMIN · FALCONVET</span>
+        <button class="exit-btn" id="exitBtn">✕ Ieșire</button>
+      </div>
+    </div>
+
+    <!-- Setup banner (shown only if GAS not configured) -->
+    <div class="setup-banner" id="setupBanner">
+      <strong>⚙️ Configurare Google Sheets</strong>
+      Urmează pașii din comentariile din cod, apoi înlocuiește <code>APPS_SCRIPT_URL</code> cu URL-ul tău.<br>
+      Până atunci, datele se salvează local în browser.
+    </div>
+
+    <div class="card fade-in">
+      <div class="sec-title">📊 Sumar</div>
+      <div class="stats-grid">
+        <div class="stat-box"><div class="val" id="sTotal">0</div><div class="key" id="kTotal">Total</div></div>
+        <div class="stat-box"><div class="val" id="sAvg">–</div><div class="key" id="kAvg">Scor Mediu</div></div>
+        <div class="stat-box"><div class="val" id="sPos">0%</div><div class="key" id="kPos">Pozitiv</div></div>
+      </div>
+
+      <div class="sec-title" id="distLabel">Distribuție</div>
+      <div class="bar-row"><span class="bar-emoji">😠</span><div class="bar-track"><div class="bar-fill b1" id="bar1"></div></div><span class="bar-pct" id="bp1">0</span></div>
+      <div class="bar-row"><span class="bar-emoji">😕</span><div class="bar-track"><div class="bar-fill b2" id="bar2"></div></div><span class="bar-pct" id="bp2">0</span></div>
+      <div class="bar-row"><span class="bar-emoji">😐</span><div class="bar-track"><div class="bar-fill b3" id="bar3"></div></div><span class="bar-pct" id="bp3">0</span></div>
+      <div class="bar-row"><span class="bar-emoji">😊</span><div class="bar-track"><div class="bar-fill b4" id="bar4"></div></div><span class="bar-pct" id="bp4">0</span></div>
+      <div class="bar-row"><span class="bar-emoji">😍</span><div class="bar-track"><div class="bar-fill b5" id="bar5"></div></div><span class="bar-pct" id="bp5">0</span></div>
+    </div>
+
+    <div class="card fade-in">
+      <div class="sec-title" id="recentLabel">Ultimele 10 Feedback-uri</div>
+      <div id="fbList"></div>
+      <button class="export-btn" id="exportBtn">⬇️ Exportă CSV</button>
+    </div>
+
+    <footer><a href="https://www.psyalexsimion.com" target="_blank">© 2025 Alex Simion</a></footer>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+//  CONFIGURARE GOOGLE APPS SCRIPT
+//  ─────────────────────────────────────────────────────────────────
+//  1. Deschide Google Sheets → Extensions → Apps Script
+//  2. Șterge codul existent și lipește:
+//
+//  function doPost(e) {
+//    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+//    var data = JSON.parse(e.postData.contents);
+//    sheet.appendRow([data.ts, data.score, data.emoji, data.label, data.text || '']);
+//    return ContentService.createTextOutput(JSON.stringify({ok:true}))
+//      .setMimeType(ContentService.MimeType.JSON);
+//  }
+//
+//  3. Click "Deploy" → "New Deployment" → tip "Web App"
+//     - Execute as: Me
+//     - Who has access: Anyone
+//  4. Copiază URL-ul generat și înlocuiește APPS_SCRIPT_URL de mai jos
+// ═══════════════════════════════════════════════════════════════════
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwvjEs0YtSbfiZ0QUg2voqe63oexpWYsKx88lySZO1RSytKOjDsI38mdclJtsmDXcoQ/exec'; // ← PUNE URL-UL TĂU AICI
+
+const LABELS = {
+  ro: ['Foarte Nemulțumit','Nemulțumit','Neutru','Mulțumit','Foarte Mulțumit'],
+  en: ['Very Unhappy','Unhappy','Neutral','Happy','Very Happy']
+};
+const T = {
+  ro:{
+    title:'Feedback FalconVet', sub:'Cum a fost vizita dumneavoastră astăzi?',
+    rate:'Evaluați experiența', comm:'Comentarii (opțional)',
+    ph:'Spuneți-ne mai multe...', submitBtn:'Trimite Feedback',
+    submitting:'Se trimite...', succTitle:'Vă mulțumim!',
+    succMsg:'Răspunsul a fost înregistrat.', errSel:'Selectați o evaluare înainte de a trimite.',
+    errFail:'Eroare la trimitere. Răspunsul a fost salvat local.',
+    dist:'Distribuție', recent:'Ultimele 10 Feedback-uri',
+    noFb:'Niciun feedback încă.', total:'Total', avg:'Scor Mediu', pos:'Pozitiv',
+    emojis:['Foarte\nNemulțumit','Nemulțumit','Neutru','Mulțumit','Foarte\nMulțumit'],
+    export:'⬇️ Exportă CSV'
+  },
+  en:{
+    title:'FalconVet Feedback', sub:'How was your visit today?',
+    rate:'Rate your experience', comm:'Comments (optional)',
+    ph:'Tell us more...', submitBtn:'Submit Feedback',
+    submitting:'Submitting...', succTitle:'Thank you!',
+    succMsg:'Your response has been recorded.', errSel:'Please select a rating first.',
+    errFail:'Submission error. Response saved locally.',
+    dist:'Distribution', recent:'Last 10 Feedback Entries',
+    noFb:'No feedback yet.', total:'Total', avg:'Avg Score', pos:'Positive',
+    emojis:['Very\nUnhappy','Unhappy','Neutral','Happy','Very\nHappy'],
+    export:'⬇️ Export CSV'
+  }
+};
+
+let lang = 'ro', selected = null, feedbacks = [], logoTaps = 0, logoTimer;
+
+// ── Storage ──────────────────────────────────────────────────────────────
+function load(){ try{ feedbacks = JSON.parse(localStorage.getItem('fv_fb')||'[]') }catch(e){ feedbacks=[] } }
+function save(){ try{ localStorage.setItem('fv_fb', JSON.stringify(feedbacks)) }catch(e){} }
+
+// ── Route: show admin if ?admin in URL ───────────────────────────────────
+function isAdmin(){ return location.search.includes('admin') || location.hash==='#admin' }
+
+function showAdmin(){
+  if(!history.state || history.state.admin !== true){
+    const url = location.pathname + '?admin';
+    history.pushState({admin:true}, '', url);
+  }
+  document.getElementById('clientView').classList.add('hide');
+  document.getElementById('adminView').classList.add('show');
+  document.getElementById('setupBanner').style.display = APPS_SCRIPT_URL ? 'none' : 'block';
+  renderAdmin();
+}
+
+function hideAdmin(){
+  document.getElementById('adminView').classList.remove('show');
+  document.getElementById('clientView').classList.remove('hide');
+  history.pushState({}, '', location.pathname);
+}
+
+window.addEventListener('popstate', ()=>{ isAdmin() ? showAdmin() : hideAdmin(); });
+document.getElementById('exitBtn').addEventListener('click', hideAdmin);
+
+// Logo 3× tap → admin
+document.getElementById('logoWrap').addEventListener('click', ()=>{
+  logoTaps++; clearTimeout(logoTimer);
+  if(logoTaps >= 3){ logoTaps = 0; showAdmin(); return; }
+  logoTimer = setTimeout(()=>{ logoTaps = 0; }, 1500);
+});
+
+// ── Language ─────────────────────────────────────────────────────────────
+function applyLang(){
+  const t = T[lang];
+  document.getElementById('langBtn').textContent = lang === 'ro' ? 'EN' : 'RO';
+  document.getElementById('mainTitle').textContent = t.title;
+  document.getElementById('mainSub').textContent = t.sub;
+  document.getElementById('rateLabel').textContent = t.rate;
+  document.getElementById('commLabel').textContent = t.comm;
+  document.getElementById('fbText').placeholder = t.ph;
+  document.getElementById('submitLbl').textContent = t.submitBtn;
+  document.getElementById('succTitle').textContent = t.succTitle;
+  document.getElementById('succMsg').textContent = t.succMsg;
+  document.getElementById('distLabel').textContent = t.dist;
+  document.getElementById('recentLabel').textContent = t.recent;
+  document.getElementById('kTotal').textContent = t.total;
+  document.getElementById('kAvg').textContent = t.avg;
+  document.getElementById('kPos').textContent = t.pos;
+  document.getElementById('exportBtn').textContent = t.export;
+  t.emojis.forEach((lbl,i)=>{
+    document.getElementById('l'+(i+1)).innerHTML = lbl.replace('\n','<br>');
+  });
+}
+
+document.getElementById('langBtn').addEventListener('click', ()=>{
+  lang = lang === 'ro' ? 'en' : 'ro'; applyLang();
+});
+
+// ── Emoji selection ───────────────────────────────────────────────────────
+document.querySelectorAll('.e-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.e-btn').forEach(b=>b.classList.remove('selected'));
+    btn.classList.add('selected');
+    selected = { id: +btn.dataset.id, emoji: btn.dataset.emoji };
+    document.getElementById('errBox').classList.remove('show');
+  });
+});
+
+// ── Char counter ──────────────────────────────────────────────────────────
+document.getElementById('fbText').addEventListener('input', e=>{
+  const n = e.target.value.length;
+  const c = document.getElementById('counter');
+  c.textContent = n+'/500';
+  c.style.color = n > 450 ? '#ef4444' : '#94a3b8';
+});
+
+// ── Submit ────────────────────────────────────────────────────────────────
+document.getElementById('submitBtn').addEventListener('click', async ()=>{
+  const t = T[lang];
+  if(!selected){
+    document.getElementById('errText').textContent = t.errSel;
+    document.getElementById('errBox').classList.add('show');
+    return;
+  }
+  const text = document.getElementById('fbText').value.trim();
+  const entry = {
+    id: Date.now(),
+    ts: new Date().toISOString(),
+    score: selected.id,
+    emoji: selected.emoji,
+    label: LABELS[lang][selected.id - 1],
+    text: text || null
+  };
+
+  // Optimistic UI
+  const btn = document.getElementById('submitBtn');
+  const lbl = document.getElementById('submitLbl');
+  btn.disabled = true;
+  lbl.innerHTML = `<span class="spinner"></span>${t.submitting}`;
+
+  // Save locally always
+  feedbacks.unshift(entry); save();
+
+  // Try Google Sheets
+  if(APPS_SCRIPT_URL){
+    try{
+      await fetch(APPS_SCRIPT_URL, {
+        method:'POST', mode:'no-cors',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(entry)
+      });
+    } catch(err){
+      document.getElementById('errText').textContent = t.errFail;
+      document.getElementById('errBox').classList.add('show');
+      setTimeout(()=>document.getElementById('errBox').classList.remove('show'), 4000);
+    }
+  }
+
+  // Reset
+  selected = null;
+  document.querySelectorAll('.e-btn').forEach(b=>b.classList.remove('selected'));
+  document.getElementById('fbText').value = '';
+  document.getElementById('counter').textContent = '0/500';
+  btn.disabled = false;
+  lbl.textContent = t.submitBtn;
+  document.getElementById('errBox').classList.remove('show');
+  document.getElementById('successBox').classList.add('show');
+  setTimeout(()=>document.getElementById('successBox').classList.remove('show'), 5000);
+});
+
+// ── Admin render ──────────────────────────────────────────────────────────
+function renderAdmin(){
+  const t = T[lang];
+  const total = feedbacks.length;
+  document.getElementById('sTotal').textContent = total;
+  if(!total){
+    document.getElementById('sAvg').textContent = '–';
+    document.getElementById('sPos').textContent = '0%';
+  } else {
+    const avg = (feedbacks.reduce((s,f)=>s+f.score,0)/total).toFixed(1);
+    const pos = Math.round(feedbacks.filter(f=>f.score>=4).length/total*100);
+    document.getElementById('sAvg').textContent = avg;
+    document.getElementById('sPos').textContent = pos+'%';
+  }
+  [1,2,3,4,5].forEach(i=>{
+    const cnt = feedbacks.filter(f=>f.score===i).length;
+    const pct = total ? Math.round(cnt/total*100) : 0;
+    document.getElementById('bar'+i).style.width = pct+'%';
+    document.getElementById('bp'+i).textContent = cnt;
+  });
+
+  const list = document.getElementById('fbList');
+  const recent = feedbacks.slice(0,10);
+  if(!recent.length){
+    list.innerHTML=`<div class="empty-state"><div class="ico">📭</div>${t.noFb}</div>`;
+    return;
+  }
+  list.innerHTML = recent.map(f=>{
+    const d = new Date(f.ts).toLocaleString(lang==='ro'?'ro-RO':'en-US',
+      {day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+    const label = LABELS[lang][f.score-1];
+    return `<div class="fb-item">
+      <div class="fb-meta">
+        <span class="big-ico">${f.emoji}</span>
+        <div class="fb-info"><div class="name">${label}</div><div class="date">${d}</div></div>
+      </div>
+      ${f.text?`<div class="fb-comment">"${f.text}"</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+// ── Export CSV ────────────────────────────────────────────────────────────
+document.getElementById('exportBtn').addEventListener('click', ()=>{
+  if(!feedbacks.length) return;
+  const rows = [['Timestamp','Score','Emoji','Label','Comment']];
+  feedbacks.forEach(f=>rows.push([f.ts,f.score,f.emoji,f.label,f.text||'']));
+  const csv = rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);
+  a.download = 'falconvet-feedback.csv';
+  a.click();
+});
+
+// ── Init ──────────────────────────────────────────────────────────────────
+load(); applyLang();
+if(isAdmin()) showAdmin();
+</script>
+</body>
+</html>
