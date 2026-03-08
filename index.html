@@ -351,7 +351,7 @@ document.getElementById('submitBtn').addEventListener('click', async ()=>{
   const text = document.getElementById('fbText').value.trim();
   const entry = {
     id: Date.now(),
-    ts: new Date().toISOString(),
+	ts: new Date().toLocaleString('ro-RO', {timeZone:'Europe/Bucharest', year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', second:'2-digit'}),
     score: selected.id,
     emoji: selected.emoji,
     label: LABELS[lang][selected.id - 1],
