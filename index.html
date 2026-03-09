@@ -170,7 +170,7 @@ footer a:hover{color:#3b82f6}
     <div class="card fade-in">
       <div class="admin-header">
         <span class="admin-badge">🔒 ADMIN · FALCONVET         </span>
-		<span>Asteptati 5 secunde pana se incarca datele!</span>
+		<span id="loadingMsg">Așteptați 5s, se încarcă datele...</span>
         <button class="exit-btn" id="exitBtn">✕ Ieșire</button>
       </div>
     </div>
@@ -246,6 +246,7 @@ const T = {
     dist:'Distribuție', recent:'Ultimele 10 Feedback-uri',
     noFb:'Niciun feedback încă.', total:'Total', avg:'Scor Mediu', pos:'Pozitiv',
     emojis:['Foarte\nNemulțumit','Nemulțumit','Neutru','Mulțumit','Foarte\nMulțumit'],
+	loading:'Așteptați, se încarcă datele...',
     export:'⬇️ Exportă CSV'
   },
   en:{
@@ -258,6 +259,7 @@ const T = {
     dist:'Distribution', recent:'Last 10 Feedback Entries',
     noFb:'No feedback yet.', total:'Total', avg:'Avg Score', pos:'Positive',
     emojis:['Very\nUnhappy','Unhappy','Neutral','Happy','Very\nHappy'],
+	loading:'Please wait, loading data...',
     export:'⬇️ Export CSV'
   }
 };
@@ -316,6 +318,7 @@ function applyLang(){
   document.getElementById('kAvg').textContent = t.avg;
   document.getElementById('kPos').textContent = t.pos;
   document.getElementById('exportBtn').textContent = t.export;
+  document.getElementById('loadingMsg').textContent = t.loading;
   t.emojis.forEach((lbl,i)=>{
     document.getElementById('l'+(i+1)).innerHTML = lbl.replace('\n','<br>');
   });
@@ -440,7 +443,7 @@ async function renderAdmin(){
   list.innerHTML = recent.map(f=>{
     const d = f.ts;
 
-    const label = LABELS[lang][f.score-1];
+	const label = LABELS[lang][(+f.score)-1] || f.label || '–';
     return `<div class="fb-item">
       <div class="fb-meta">
         <span class="big-ico">${f.emoji}</span>
