@@ -26,11 +26,12 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:linear-gradient(135d
 .header p{color:#64748b;font-size:.95rem}
 
 /* EMOJI */
-.emoji-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:18px 0}
-.e-btn{border:2px solid transparent;border-radius:14px;padding:12px 4px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;transition:all .2s;background:#f8fafc}
+.emoji-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:clamp(4px,2vw,10px);margin:18px 0}
+
+.e-btn{border:2px solid transparent;border-radius:14px;padding:8px 2px 4px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;transition:all .2s;background:#f8fafc}
 .e-btn:hover{transform:translateY(-3px);box-shadow:0 6px 16px rgba(0,0,0,.1)}
 .e-btn.selected{transform:translateY(-3px);box-shadow:0 6px 20px rgba(0,0,0,.15)}
-.e-btn .ico{font-size:2rem;line-height:1}
+.e-btn .ico{font-size:clamp(1rem,4vw,1.6rem)}
 .e-btn .lbl{font-size:.6rem;color:#374151;font-weight:600;text-align:center;line-height:1.3}
 .e1{background:#fff0f0}.e1.selected{border-color:#ef4444;background:#fff0f0}
 .e2{background:#fff4ed}.e2.selected{border-color:#f97316;background:#fff4ed}
@@ -219,6 +220,7 @@ footer a:hover{color:#3b82f6}
 //    sheet.appendRow([data.ts, data.score, data.emoji, data.label, data.text || '']);
 //    return ContentService.createTextOutput(JSON.stringify({ok:true}))
 //      .setMimeType(ContentService.MimeType.JSON);
+//		.setHeader('Access-Control-Allow-Origin', '*');
 //  }
 //
 //  3. Click "Deploy" → "New Deployment" → tip "Web App"
@@ -226,7 +228,7 @@ footer a:hover{color:#3b82f6}
 //     - Who has access: Anyone
 //  4. Copiază URL-ul generat și înlocuiește APPS_SCRIPT_URL de mai jos
 // ═══════════════════════════════════════════════════════════════════
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwvjEs0YtSbfiZ0QUg2voqe63oexpWYsKx88lySZO1RSytKOjDsI38mdclJtsmDXcoQ/exec'; // ← PUNE URL-UL TĂU AICI
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzA-CrzJcFNHa-IsmuSTgEQytVY7AC9I56ixilLN6q3tKcl5aQueOniRzdg4NuGOrs/exec'; // ← PUNE URL-UL TĂU AICI
 
 const LABELS = {
   ro: ['Foarte Nemulțumit','Nemulțumit','Neutru','Mulțumit','Foarte Mulțumit'],
@@ -235,7 +237,7 @@ const LABELS = {
 const T = {
   ro:{
     title:'Feedback FalconVet', sub:'Cum a fost vizita dumneavoastră astăzi?',
-    rate:'Evaluați experiența', comm:'Comentarii (opțional)',
+    rate:'Evaluați experiența', comm:'Ce ati vrea sa fie imbunatatit pentru o experienta mai placuta?',
     ph:'Spuneți-ne mai multe...', submitBtn:'Trimite Feedback',
     submitting:'Se trimite...', succTitle:'Vă mulțumim!',
     succMsg:'Răspunsul a fost înregistrat.', errSel:'Selectați o evaluare înainte de a trimite.',
@@ -268,7 +270,7 @@ function save(){ try{ localStorage.setItem('fv_fb', JSON.stringify(feedbacks)) }
 // ── Route: show admin if ?admin in URL ───────────────────────────────────
 function isAdmin(){ return location.search.includes('admin') || location.hash==='#admin' }
 
-function showAdmin(){
+async function showAdmin(){
   if(!history.state || history.state.admin !== true){
     const url = location.pathname + '?admin';
     history.pushState({admin:true}, '', url);
@@ -395,8 +397,21 @@ document.getElementById('submitBtn').addEventListener('click', async ()=>{
 });
 
 // ── Admin render ──────────────────────────────────────────────────────────
-function renderAdmin(){
+async function renderAdmin(){
   const t = T[lang];
+  
+  // Citește din Sheets dacă e configurat
+  if(APPS_SCRIPT_URL){
+    try{
+      const res = await fetch(APPS_SCRIPT_URL);
+      const data = await res.json();
+      feedbacks = data.reverse(); // cel mai recent primul
+      save();
+    } catch(err){
+      console.warn('Could not fetch from Sheets, using localStorage');
+    }
+  }
+
   const total = feedbacks.length;
   document.getElementById('sTotal').textContent = total;
   if(!total){
@@ -422,8 +437,8 @@ function renderAdmin(){
     return;
   }
   list.innerHTML = recent.map(f=>{
-    const d = new Date(f.ts).toLocaleString(lang==='ro'?'ro-RO':'en-US',
-      {day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+    const d = f.ts;
+
     const label = LABELS[lang][f.score-1];
     return `<div class="fb-item">
       <div class="fb-meta">
